@@ -24,6 +24,7 @@ use Cake\Utility\Hash;
  * @property int $parent_id
  * @property string $path
  *
+ * @property \BEdita\Core\Model\Entity\Tree[] $pathNodes
  * @property \BEdita\Core\Model\Entity\Folder|null $parent
  * @property \BEdita\Core\Model\Entity\ObjectEntity[] $children
  *
@@ -41,7 +42,7 @@ class Folder extends ObjectEntity
 
         $this->setAccess('parents', false);
         $this->setHidden(['parents', 'tree_parent_nodes'], true);
-        $this->setVirtual(['path'], true);
+        $this->setVirtual(['path', 'menu', 'canonical'], true);
         $this->setAccess('path', false);
     }
 
@@ -164,20 +165,51 @@ class Folder extends ObjectEntity
         if (!$this->has('id')) {
             return null;
         }
+        $this->readPathNodes();
+        $path = Hash::extract((array)$this->pathNodes, '{n}.object_id');
+
+        return sprintf('/%s', implode('/', $path));
+    }
+
+    protected function readPathNodes(): void
+    {
+        if (!empty($this->pathNodes)) {
+            return;
+        }
 
         try {
-            $path = TableRegistry::getTableLocator()->get('Trees')
+            $this->pathNodes = TableRegistry::getTableLocator()->get('Trees')
                 ->find('pathNodes', [$this->id])
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'object_id',
-                ])
                 ->toArray();
         } catch (RecordNotFoundException $previous) {
             throw new \RuntimeException(__d('bedita', 'Folder "{0}" is not on the tree.', $this->id), 0, $previous);
         }
+    }
 
-        return sprintf('/%s', implode('/', $path));
+    /**
+     * Getter for `parent_id` virtual property
+     *
+     * @return int|null
+     */
+    public function _getMenu()
+    {
+        $this->readPathNodes();
+        $node = end($this->pathNodes);
+
+        return (bool)Hash::get($node, 'menu');
+    }
+
+    /**
+     * Getter for `parent_id` virtual property
+     *
+     * @return bool
+     */
+    public function _getCanonical()
+    {
+        $this->readPathNodes();
+        $node = end($this->pathNodes);
+
+        return (bool)Hash::get($node, 'canonical');
     }
 
     /**
