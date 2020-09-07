@@ -52,10 +52,8 @@ class HistoryController extends AppController
     {
         $this->request->allowMethod('get');
 
-        $filter = (array)$this->request->getQuery('filter');
         $action = new ListEntitiesAction(['table' => $this->HistoryTable]);
-        $query = $action(compact('filter'));
-        $this->set('_fields', $this->request->getQuery('fields', []));
+        $query = $action($this->requestQuery);
         $data = $this->paginate($query);
 
         $this->set(compact('data'));

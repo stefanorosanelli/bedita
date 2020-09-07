@@ -140,13 +140,9 @@ abstract class ResourcesController extends AppController
                 );
         } else {
             // List existing entities.
-            $filter = (array)$this->request->getQuery('filter') + array_filter(['query' => $this->request->getQuery('q')]);
-            $contain = $this->prepareInclude($this->request->getQuery('include'));
-
             $action = new ListEntitiesAction(['table' => $this->Table]);
-            $query = $action(compact('filter', 'contain'));
+            $query = $action($this->requestQuery);
 
-            $this->set('_fields', $this->request->getQuery('fields', []));
             $data = $this->paginate($query);
         }
 
@@ -192,10 +188,8 @@ abstract class ResourcesController extends AppController
     {
         $this->request->allowMethod(['get', 'patch', 'delete']);
 
-        $contain = $this->prepareInclude($this->request->getQuery('include'));
-
         $action = new GetEntityAction(['table' => $this->Table]);
-        $entity = $action(['primaryKey' => $id, 'contain' => $contain]);
+        $entity = $action(['primaryKey' => $id] + $this->requestQuery);
 
         if ($this->request->is('delete')) {
             // Delete an entity.
@@ -221,7 +215,6 @@ abstract class ResourcesController extends AppController
             $entity = $action(compact('entity', 'data'));
         }
 
-        $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('entity'));
         $this->set('_serialize', ['entity']);
 
@@ -243,17 +236,14 @@ abstract class ResourcesController extends AppController
         $relatedId = $this->request->getParam('related_id');
 
         $association = $this->findAssociation($relationship);
-        $filter = (array)$this->request->getQuery('filter') + array_filter(['query' => $this->request->getQuery('q')]);
-        $contain = $this->prepareInclude($this->request->getQuery('include'));
 
         $action = $this->getAssociatedAction($association);
-        $data = $action->execute(['primaryKey' => $relatedId] + compact('filter', 'contain'));
+        $data = $action->execute(['primaryKey' => $relatedId] + $this->requestQuery);
 
         if ($data instanceof Query) {
             $data = $this->paginate($data);
         }
 
-        $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('data'));
         $this->set('_serialize', ['data']);
 

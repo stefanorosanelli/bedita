@@ -44,6 +44,13 @@ class AppController extends Controller
     ];
 
     /**
+     * Parsed request query used internally
+     *
+     * @var array
+     */
+    public $requestQuery = [];
+
+    /**
      * Default pagination options.
      * May be overridden in configuration.
      *
@@ -111,6 +118,8 @@ class AppController extends Controller
                 __d('bedita', 'Bad request content type "{0}"', $this->request->getHeaderLine('Accept'))
             );
         }
+        // read & parse common query string
+        $this->readRequestQuery();
 
         return null;
     }
@@ -195,5 +204,14 @@ class AppController extends Controller
     protected function findAssociation($relationship)
     {
         throw new NotFoundException(__d('bedita', 'Relationship "{0}" does not exist', $relationship));
+    }
+
+    protected function readRequestQuery()
+    {
+        $this->set('_fields', $this->request->getQuery('fields', []));
+        $filter = (array)$this->request->getQuery('filter') + array_filter(['query' => $this->request->getQuery('q')]);
+        $contain = $this->prepareInclude($this->request->getQuery('include'));
+        $lang = $this->request->getQuery('lang');
+        $this->requestQuery = array_filter(compact('filter', 'contain', 'lang'));
     }
 }

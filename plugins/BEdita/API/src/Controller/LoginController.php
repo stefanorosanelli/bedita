@@ -27,6 +27,7 @@ use Cake\Http\Exception\UnauthorizedException;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
+use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
@@ -248,7 +249,6 @@ class LoginController extends AppController
 
         $user = $this->userEntity();
 
-        $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('user'));
         $this->set('_serialize', ['user']);
     }
@@ -318,7 +318,7 @@ class LoginController extends AppController
         if (!$userId) {
             $this->Auth->getAuthenticate('BEdita/API.Jwt')->unauthenticated($this->request, $this->response);
         }
-        $contain = $this->prepareInclude($this->request->getQuery('include'));
+        $contain = (array)Hash::get($this->requestQuery, 'contain');
         $contain = array_unique(array_merge($contain, ['Roles']));
         $conditions = ['id' => $userId];
 

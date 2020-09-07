@@ -189,14 +189,8 @@ class ObjectsController extends ResourcesController
                 );
         } else {
             // List existing entities.
-            $filter = (array)$this->request->getQuery('filter') + array_filter(['query' => $this->request->getQuery('q')]);
-            $contain = $this->prepareInclude($this->request->getQuery('include'));
-            $lang = $this->request->getQuery('lang');
-
             $action = new ListObjectsAction(['table' => $this->Table, 'objectType' => $this->objectType]);
-            $query = $action(compact('filter', 'contain', 'lang'));
-
-            $this->set('_fields', $this->request->getQuery('fields', []));
+            $query = $action($this->requestQuery);
             $data = $this->paginate($query);
         }
 
@@ -227,14 +221,9 @@ class ObjectsController extends ResourcesController
         $this->request->allowMethod(['get', 'patch', 'delete']);
 
         $id = TableRegistry::getTableLocator()->get('Objects')->getId($id);
-        $contain = $this->prepareInclude($this->request->getQuery('include'));
 
         $action = new GetObjectAction(['table' => $this->Table, 'objectType' => $this->objectType]);
-        $entity = $action([
-            'primaryKey' => $id,
-            'contain' => $contain,
-            'lang' => $this->request->getQuery('lang'),
-        ]);
+        $entity = $action(['primaryKey' => $id] + $this->requestQuery);
 
         if ($this->request->is('delete')) {
             // Delete an entity.
@@ -260,7 +249,6 @@ class ObjectsController extends ResourcesController
             $entity = $action(compact('entity', 'data'));
         }
 
-        $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('entity'));
         $this->set('_serialize', ['entity']);
 
@@ -288,18 +276,13 @@ class ObjectsController extends ResourcesController
         $relatedId = TableRegistry::getTableLocator()->get('Objects')->getId($this->request->getParam('related_id'));
 
         $association = $this->findAssociation($relationship);
-        $filter = (array)$this->request->getQuery('filter') + array_filter(['query' => $this->request->getQuery('q')]);
-        $contain = $this->prepareInclude($this->request->getQuery('include'));
-        $lang = $this->request->getQuery('lang');
-
         $action = $this->getAssociatedAction($association);
-        $objects = $action(['primaryKey' => $relatedId] + compact('filter', 'contain', 'lang'));
+        $objects = $action(['primaryKey' => $relatedId] + $this->requestQuery);
 
         if ($objects instanceof Query) {
             $objects = $this->paginate($objects);
         }
 
-        $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('objects'));
         $this->set('_serialize', ['objects']);
 
