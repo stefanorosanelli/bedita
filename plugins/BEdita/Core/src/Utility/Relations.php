@@ -41,6 +41,25 @@ use Cake\Utility\Inflector;
 class Relations
 {
     /**
+     * Default options array with following keys:
+     *
+     *  - 'save': default options performing `Table::save()`
+     *  - 'delete': default options performing `Table::delete()`
+     *
+     * @var array
+     */
+    protected static $defaults = [
+        // since default usage is in migrations
+        // don't commit transactions but let migrations do it
+        'save' => [
+            'atomic' => false,
+        ],
+        'delete' => [
+            'atomic' => false,
+        ],
+    ];
+
+    /**
      * Create new relations in `relations` table using input `$relations` array
      *
      * @param array $relations Relation data
@@ -49,11 +68,12 @@ class Relations
      */
     public static function create(array $relations, array $options = []): void
     {
+        TableRegistry::getTableLocator()->clear();
         $Relations = TableRegistry::getTableLocator()->get('Relations', $options);
         foreach ($relations as $data) {
             static::validate($data);
             $relation = $Relations->newEntity($data);
-            $relation = $Relations->saveOrFail($relation);
+            $relation = $Relations->saveOrFail($relation, static::$defaults['save']);
 
             static::addTypes($relation->get('id'), $data['left'], 'left', $options);
             static::addTypes($relation->get('id'), $data['right'], 'right', $options);
@@ -88,6 +108,7 @@ class Relations
      */
     protected static function addTypes($relationId, array $types, string $side, array $options = []): void
     {
+        TableRegistry::getTableLocator()->clear();
         $RelationTypes = TableRegistry::getTableLocator()->get('RelationTypes', $options);
         $ObjectTypes = TableRegistry::getTableLocator()->get('ObjectTypes', $options);
 
@@ -99,7 +120,7 @@ class Relations
                 'object_type_id' => $objectType->get('id'),
                 'side' => $side,
             ]);
-            $RelationTypes->saveOrFail($entity);
+            $RelationTypes->saveOrFail($entity, static::$defaults['save']);
         }
     }
 
@@ -112,9 +133,11 @@ class Relations
      */
     public static function remove(array $relations, array $options = []): void
     {
+        TableRegistry::getTableLocator()->clear();
         $Relations = TableRegistry::getTableLocator()->get('Relations', $options);
         foreach ($relations as $r) {
             static::validate($r);
+            /** @var \Cake\Datasource\EntityInterface $relation */
             $relation = $Relations->find()
                 ->where(['name' => Hash::get($r, 'name')])
                 ->firstOrFail();
@@ -122,7 +145,7 @@ class Relations
             static::removeTypes($relation->get('id'), $r['left'], 'left', $options);
             static::removeTypes($relation->get('id'), $r['right'], 'right', $options);
 
-            $Relations->deleteOrFail($relation);
+            $Relations->deleteOrFail($relation, static::$defaults['delete']);
         }
     }
 
@@ -137,12 +160,14 @@ class Relations
      */
     protected static function removeTypes($relationId, array $types, string $side, array $options = []): void
     {
+        TableRegistry::getTableLocator()->clear();
         $RelationTypes = TableRegistry::getTableLocator()->get('RelationTypes', $options);
         $ObjectTypes = TableRegistry::getTableLocator()->get('ObjectTypes', $options);
 
         foreach ($types as $name) {
             $objectType = $ObjectTypes->get(Inflector::camelize($name));
 
+            /** @var \Cake\Datasource\EntityInterface $relationType */
             $relationType = $RelationTypes->find()
                 ->where([
                     'relation_id' => $relationId,
@@ -151,7 +176,7 @@ class Relations
                 ])
                 ->firstOrFail();
 
-            $RelationTypes->deleteOrFail($relationType);
+            $RelationTypes->deleteOrFail($relationType, static::$defaults['delete']);
         }
     }
 
@@ -185,6 +210,7 @@ class Relations
 
         $result = [];
         foreach ($data as $r) {
+            /** @var \Cake\Datasource\EntityInterface $relation */
             $relation = $Relations->find()
                 ->where(['name' => Hash::get($r, 'name')])
                 ->contain(['LeftObjectTypes', 'RightObjectTypes'])
@@ -193,7 +219,7 @@ class Relations
             foreach ($r as $k => $v) {
                 $relation->set($k, $v);
             }
-            $result[] = $Relations->saveOrFail($relation);
+            $result[] = $Relations->saveOrFail($relation, static::$defaults['save']);
         }
 
         return $result;
