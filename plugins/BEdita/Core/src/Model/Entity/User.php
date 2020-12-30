@@ -55,7 +55,7 @@ class User extends Profile
     protected function getMeta()
     {
         $meta = parent::getMeta();
-        $meta['external_auth'] = $this->getExternalAuthMeta();
+        // $meta['external_auth'] = $this->getExternalAuthMeta();
 
         return $meta;
     }

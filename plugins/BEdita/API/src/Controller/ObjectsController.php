@@ -231,7 +231,9 @@ class ObjectsController extends ResourcesController
     {
         $this->request->allowMethod(['get', 'patch', 'delete']);
 
-        $id = TableRegistry::getTableLocator()->get('Objects')->getId($id);
+        if (!is_numeric($id)) {
+            $id = TableRegistry::getTableLocator()->get('Objects')->getId($id);
+        }
         $contain = $this->prepareInclude($this->request->getQuery('include'));
 
         $action = new GetObjectAction(['table' => $this->Table, 'objectType' => $this->objectType]);

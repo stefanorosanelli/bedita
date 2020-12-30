@@ -16,6 +16,7 @@ namespace BEdita\Core\State;
 use BEdita\Core\Configure\Engine\DatabaseConfig;
 use BEdita\Core\Model\Entity\Application;
 use BEdita\Core\SingletonTrait;
+use Cake\Cache\Cache;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 
@@ -27,6 +28,8 @@ use Cake\ORM\TableRegistry;
 class CurrentApplication
 {
     use SingletonTrait;
+
+    const CACHE_CONFIG = '_cake_core_';
 
     /**
      * Current application entity.
@@ -121,12 +124,22 @@ class CurrentApplication
      *
      * @param string $apiKey API key.
      * @return void
+     * @throws \Cake\Datasource\Exception\RecordNotFoundException
      */
     public static function setFromApiKey($apiKey)
     {
-        static::getInstance()->set(
-            TableRegistry::getTableLocator()->get('Applications')->find('apiKey', compact('apiKey'))->firstOrFail()
+        $app = Cache::remember(
+            'app_' . $apiKey,
+            function () use ($apiKey) {
+                return TableRegistry::getTableLocator()
+                    ->get('Applications')
+                    ->find('apiKey', compact('apiKey'))
+                    ->firstOrFail();
+            },
+            self::CACHE_CONFIG
         );
+
+        static::getInstance()->set($app);
     }
 
     /**
