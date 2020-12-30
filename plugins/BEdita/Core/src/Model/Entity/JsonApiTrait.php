@@ -14,6 +14,8 @@
 namespace BEdita\Core\Model\Entity;
 
 use BEdita\Core\Utility\JsonApiSerializable;
+use BEdita\Core\Utility\Timer;
+use Cake\Cache\Cache;
 use Cake\ORM\Association;
 use Cake\ORM\Association\BelongsToMany;
 use Cake\ORM\Table;
@@ -40,6 +42,13 @@ trait JsonApiTrait
      * @var array
      */
     protected $_fields = [];
+
+    /**
+     * Model info on associations and visible properties.
+     *
+     * @var array
+     */
+    protected static $modelInfo = [];
 
     /**
      * Getter for entity's visible properties.
@@ -119,7 +128,12 @@ trait JsonApiTrait
      */
     protected function getId()
     {
-        return implode(',', $this->extract((array)$this->getTable()->getPrimaryKey()));
+        return implode(',', $this->extract((array)$this->getTablePrimaryKey()));
+    }
+
+    protected function getTablePrimaryKey()
+    {
+        return $this->getTable()->getPrimaryKey();
     }
 
     /**
@@ -165,12 +179,11 @@ trait JsonApiTrait
      */
     protected function getAttributes()
     {
-        $table = $this->getTable();
-        $associations = static::listAssociations($table, $this->getHidden());
+        $associations = $this->modelAssociations();
         $visible = $this->filterFields($this->getVisible());
 
         $properties = array_filter(
-            array_diff($visible, (array)$table->getPrimaryKey(), $associations, ['_joinData', '_matchingData', '_countData']),
+            array_diff($visible, (array)$this->getTablePrimaryKey(), $associations, ['_joinData', '_matchingData', '_countData']),
             [$this, 'isAccessible']
         );
 
@@ -184,29 +197,30 @@ trait JsonApiTrait
      */
     protected function getMeta()
     {
-        $table = $this->getTable();
-        $associations = static::listAssociations($table, $this->getHidden());
+        // $table = $this->getTable();
+        $associations = $this->modelAssociations();
         $visible = $this->filterFields($this->getVisible());
-        $virtual = $this->getVirtual();
+        // $virtual = $this->getVirtual();
 
         $properties = array_filter(
-            array_diff($visible, (array)$table->getPrimaryKey(), $associations, ['_joinData', '_matchingData', '_countData']),
+            array_diff($visible, (array)$this->getTablePrimaryKey(), $associations, ['_joinData', '_matchingData', '_countData']),
             function ($property) {
                 return !$this->isAccessible($property);
             }
         );
-        $extraProperties = array_filter(
-            $properties,
-            function ($property) use ($table, $virtual) {
-                return !in_array($property, $virtual) && !$table->hasField($property);
-            }
-        );
+        // $extraProperties = array_filter(
+        //     $properties,
+        //     function ($property) use ($table, $virtual) {
+        //         return !in_array($property, $virtual) && !$table->hasField($property);
+        //     }
+        // );
 
-        $meta = $this->extract(array_diff($properties, $extraProperties));
-        if (!empty($extraProperties)) {
-            $meta['extra'] = $this->extract($extraProperties);
-        }
-        $meta += array_filter(['relation' => $this->joinData()]);
+        $meta = $this->extract($properties);
+        // $meta = $this->extract(array_diff($properties, $extraProperties));
+        // if (!empty($extraProperties)) {
+        //     $meta['extra'] = $this->extract($extraProperties);
+        // }
+        // $meta += array_filter(['relation' => $this->joinData()]);
 
         return $meta;
     }
@@ -309,7 +323,7 @@ trait JsonApiTrait
     {
         $relationships = $included = [];
 
-        $associations = static::listAssociations($this->getTable(), $this->getHidden());
+        $associations = $this->modelAssociations();
         foreach ($associations as $relationship) {
             $self = Router::url(
                 [
@@ -375,6 +389,15 @@ trait JsonApiTrait
         return null;
     }
 
+    protected function modelAssociations(): array
+    {
+        if (empty(static::$modelInfo['associations'])) {
+            static::$modelInfo['associations'] = static::listAssociations($this->getTable(), $this->getHidden());
+        }
+
+        return static::$modelInfo['associations'];
+    }
+
     /**
      * List all available relationships for a model.
      *
@@ -410,6 +433,25 @@ trait JsonApiTrait
         return $relationships;
     }
 
+    protected function loadModelInfo(): void
+    {
+        if (!empty(static::$modelInfo)) {
+            return;
+        };
+
+        static::$modelInfo = (array)Cache::remember(
+            'entity' . $this->getSource(),
+            function () {
+                $associations = static::listAssociations($this->getTable(), $this->getHidden());
+                $visible = $this->getVisible();
+                $type = $this->getType();
+
+                return compact('associations', 'visible', 'type');
+            },
+            '_bedita_object_types_'
+        );
+    }
+
     /**
      * JSON API serializer.
      *
@@ -419,6 +461,7 @@ trait JsonApiTrait
      */
     public function jsonApiSerialize($options = 0, $fields = [])
     {
+        $this->loadModelInfo();
         $id = $this->getId();
         $type = $this->getType();
         if (!empty($fields[$type])) {
@@ -426,20 +469,23 @@ trait JsonApiTrait
         } elseif (!empty($fields['_common'])) {
             $this->setFields($fields['_common']);
         }
-
+        Timer::addTime('j1');
         $attributes = $meta = $links = $relationships = $included = null;
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_ATTRIBUTES) === 0) {
             $attributes = $this->getAttributes();
         }
+        // Timer::addTime('j2');
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_META) === 0) {
             $meta = $this->getMeta();
         }
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_LINKS) === 0) {
             $links = $this->getLinks();
         }
+        // Timer::addTime('j3');
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_RELATIONSHIPS) === 0) {
             list($relationships, $included) = $this->getRelationships();
         }
+        Timer::addTime('j4');
 
         return array_filter(compact('id', 'type', 'attributes', 'meta', 'links', 'relationships', 'included'));
     }

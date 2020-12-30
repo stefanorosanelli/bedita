@@ -101,6 +101,13 @@ class ObjectEntity extends Entity implements JsonApiSerializable
     ];
 
     /**
+     * Relation urls templates.
+     *
+     * @var array
+     */
+    protected static $relUrls = [];
+
+    /**
      * See if a property has been set in an entity.
      * Could be set in `_properties` array or a virtual one.
      * Options to exclude hidden properties and to include virtual properties.
@@ -133,6 +140,14 @@ class ObjectEntity extends Entity implements JsonApiSerializable
     public function getTable()
     {
         return TableRegistry::getTableLocator()->get($this->type ?: $this->getSource());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTablePrimaryKey()
+    {
+        return 'id';
     }
 
     /**
@@ -194,32 +209,32 @@ class ObjectEntity extends Entity implements JsonApiSerializable
             return [$relationships, $included];
         }
 
-        $entity = $this;
-        $table = $this->getTable();
-        if ($table->getRegistryAlias() !== $this->getSource()) {
-            $entity = $table->newEntity();
-        }
+        // $table = $this->getTable();
+        // if ($table->getRegistryAlias() === $this->getSource()) {
+            $associations = $this->modelAssociations();
+        // } else {
+        //     $entity = $table->newEntity();
+        //     $associations = $entity::listAssociations($table, $entity->getHidden());
+        // }
 
-        $associations = $entity::listAssociations($table, $entity->getHidden());
         foreach ($associations as $relationship) {
-            $self = Router::url(
+            $self = $this->relationUrl(
+                'api:objects:relationships',
                 [
-                    '_name' => 'api:objects:relationships',
                     'object_type' => $this->type,
                     'relationship' => $relationship,
                     'id' => $this->getId(),
-                ],
-                true
+                ]
             );
-            $related = Router::url(
+            $related = $this->relationUrl(
+                'api:objects:related',
                 [
-                    '_name' => 'api:objects:related',
                     'object_type' => $this->type,
                     'relationship' => $relationship,
                     'related_id' => $this->getId(),
-                ],
-                true
+                ]
             );
+            // $self = $related = '';
 
             if ($this->has($relationship)) {
                 $entities = $this->get($relationship);
@@ -253,6 +268,10 @@ class ObjectEntity extends Entity implements JsonApiSerializable
      */
     public function getVisible()
     {
+        if (!empty(static::$modelInfo['visible'])) {
+            return static::$modelInfo['visible'];
+        }
+
         $visible = parent::getVisible();
         $this->loadObjectType();
         if (!$this->object_type) {
@@ -288,6 +307,10 @@ class ObjectEntity extends Entity implements JsonApiSerializable
      */
     protected function _getType()
     {
+        if (!empty(static::$modelInfo['type'])) {
+            return static::$modelInfo['type'];
+        }
+
         $this->loadObjectType();
         if (!$this->object_type) {
             return null;
@@ -313,5 +336,22 @@ class ObjectEntity extends Entity implements JsonApiSerializable
         }
 
         return $type;
+    }
+
+    protected function relationUrl(string $name, array $params): string
+    {
+        $generic = $params;
+        array_walk(
+            $generic,
+            function (&$v, $k) {
+                $v = sprintf('{%s}', $k);
+            }
+        );
+
+        if (empty(static::$relUrls[$name])) {
+            static::$relUrls[$name] = Router::url(['_name' => $name] + $generic, true);
+        }
+
+        return str_replace(array_values($generic), array_values($params), static::$relUrls[$name]);
     }
 }
