@@ -15,6 +15,7 @@ namespace BEdita\API\Controller;
 use BadMethodCallException;
 use BEdita\API\Datasource\JsonApiPaginator;
 use BEdita\Core\State\CurrentApplication;
+use BEdita\Core\Utility\Timer;
 use Cake\Controller\Controller;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -59,6 +60,7 @@ class AppController extends Controller
      */
     public function initialize()
     {
+        Timer::addTime('a1');
         parent::initialize();
 
         $this->response = $this->response->withHeader('X-BEdita-Version', Configure::read('BEdita.version'));
@@ -106,6 +108,8 @@ class AppController extends Controller
      */
     public function beforeFilter(Event $event)
     {
+        Timer::addTime('a2');
+
         if (!$this->request->is(['json', 'jsonapi'])) {
             throw new NotAcceptableException(
                 __d('bedita', 'Bad request content type "{0}"', $this->request->getHeaderLine('Accept'))
@@ -113,6 +117,11 @@ class AppController extends Controller
         }
 
         return null;
+    }
+
+    public function beforeRender(Event $event)
+    {
+        Timer::addTime('a3');
     }
 
     /**

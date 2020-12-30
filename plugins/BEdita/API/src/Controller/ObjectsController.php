@@ -22,6 +22,7 @@ use BEdita\Core\Model\Action\ListRelatedObjectsAction;
 use BEdita\Core\Model\Action\RemoveRelatedObjectsAction;
 use BEdita\Core\Model\Action\SaveEntityAction;
 use BEdita\Core\Model\Action\SetRelatedObjectsAction;
+use BEdita\Core\Utility\Timer;
 use Cake\Datasource\EntityInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Event\Event;
@@ -115,6 +116,7 @@ class ObjectsController extends ResourcesController
     {
         $type = $this->request->getParam('object_type', Inflector::underscore($this->request->getParam('controller')));
         try {
+            Timer::addTime('o1');
             /** @var \BEdita\Core\Model\Entity\ObjectType $this->objectType */
             $this->objectType = TableRegistry::getTableLocator()->get('ObjectTypes')->get($type);
             if ($type !== $this->objectType->name) {

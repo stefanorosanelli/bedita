@@ -14,6 +14,7 @@
 namespace BEdita\Core\Model\Entity;
 
 use BEdita\Core\Utility\JsonApiSerializable;
+use BEdita\Core\Utility\Timer;
 use Cake\ORM\Association;
 use Cake\ORM\Association\BelongsToMany;
 use Cake\ORM\Table;
@@ -427,19 +428,23 @@ trait JsonApiTrait
             $this->setFields($fields['_common']);
         }
 
+        Timer::addTime('j1');
         $attributes = $meta = $links = $relationships = $included = null;
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_ATTRIBUTES) === 0) {
             $attributes = $this->getAttributes();
         }
+        // Timer::addTime('j2');
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_META) === 0) {
             $meta = $this->getMeta();
         }
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_LINKS) === 0) {
             $links = $this->getLinks();
         }
+        // Timer::addTime('j3');
         if (($options & JsonApiSerializable::JSONAPIOPT_EXCLUDE_RELATIONSHIPS) === 0) {
             list($relationships, $included) = $this->getRelationships();
         }
+        Timer::addTime('j4');
 
         return array_filter(compact('id', 'type', 'attributes', 'meta', 'links', 'relationships', 'included'));
     }
