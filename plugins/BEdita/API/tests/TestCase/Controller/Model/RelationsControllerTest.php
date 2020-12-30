@@ -330,7 +330,14 @@ class RelationsControllerTest extends IntegrationTestCase
 
         $this->assertHeader('Location', 'http://api.example.com/model/relations/' . $relation->id);
 
-        $expected = array_merge(['id' => $relation->id], $data['attributes']);
+        $expected = array_merge(['id' => $relation->id], $data['attributes'], [
+            'params' => [
+                'definitions' => [],
+                '$schema' => 'http://json-schema.org/draft-06/schema#',
+                'type' => 'object',
+                'test' => 'ok',
+            ],
+        ]);
         static::assertJsonStringEqualsJsonString(json_encode($expected), json_encode($relation->toArray()));
     }
 
@@ -434,7 +441,7 @@ class RelationsControllerTest extends IntegrationTestCase
         $this->delete('/model/relations/1');
 
         $this->assertResponseCode(204);
-        $this->assertContentType('application/vnd.api+json');
+        $this->assertResponseEmpty();
         $this->assertFalse(TableRegistry::getTableLocator()->get('Relations')->exists(['id' => 1]));
     }
 

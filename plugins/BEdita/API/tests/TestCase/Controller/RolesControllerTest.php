@@ -405,7 +405,7 @@ class RolesControllerTest extends IntegrationTestCase
         $this->configRequestHeaders('DELETE', $this->getUserAuthHeader());
         $this->delete('/roles/2');
         $this->assertResponseCode(204);
-        $this->assertContentType('application/vnd.api+json');
+        $this->assertResponseEmpty();
         $this->assertFalse(TableRegistry::getTableLocator()->get('Roles')->exists(['id' => 2]));
     }
 
@@ -495,6 +495,12 @@ class RolesControllerTest extends IntegrationTestCase
                         'last_login_err' => null,
                         'num_login_err' => 1,
                         'verified' => '2017-05-29T11:36:00+00:00',
+                        'external_auth' => [
+                            [
+                                'provider' => 'example',
+                                'username' => 'first_user'
+                            ],
+                        ],
                     ],
                     'links' => [
                         'self' => 'http://api.example.com/users/1',

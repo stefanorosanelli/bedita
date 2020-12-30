@@ -86,6 +86,7 @@ class ObjectsTable extends Table
         $this->hasMany('DateRanges', [
             'foreignKey' => 'object_id',
             'className' => 'BEdita/Core.DateRanges',
+            'sort' => ['start_date' => 'ASC'],
             'saveStrategy' => 'replace',
         ]);
         $this->belongsTo('CreatedByUsers', [
@@ -411,7 +412,24 @@ class ObjectsTable extends Table
             $query = $query->find('statusLevel', [Configure::read('Status.level')]);
         }
 
-        return $query->where(['deleted' => 0]);
+        return $query->where([$this->aliasField('deleted') => 0]);
+    }
+
+    /**
+     * Finder to get an object by ID or 'uname'
+     *
+     * @param \Cake\ORM\Query $query Query object instance.
+     * @param array $options Array with ID or uname as first element.
+     * @return \Cake\ORM\Query
+     */
+    protected function findUnameId(Query $query, array $options)
+    {
+        $id = (string)Hash::get($options, '0');
+        if (is_numeric($id)) {
+            return $query->where([$this->aliasField('id') => (int)$id]);
+        }
+
+        return $query->where([$this->aliasField('uname') => $id]);
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * BEdita, API-first content management framework
- * Copyright 2016 ChannelWeb Srl, Chialab Srl
+ * Copyright 2020 ChannelWeb Srl, Chialab Srl
  *
  * This file is part of BEdita: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -48,7 +48,11 @@ class SetAssociatedAction extends UpdateAssociatedAction
 
             $res = $this->toMany($entity, $relatedEntities);
             foreach ($relatedEntities as $relatedEntity) {
-                if ($relatedEntity->has('_joinData') && $relatedEntity->get('_joinData')->getErrors()) {
+                if (
+                    $relatedEntity->has('_joinData') &&
+                    ($relatedEntity->get('_joinData') instanceof EntityInterface) &&
+                    $relatedEntity->get('_joinData')->getErrors()
+                ) {
                     throw new BadRequestException([
                         'title' => __d('bedita', 'Error linking entities'),
                         'detail' => $relatedEntity->get('_joinData')->getErrors(),
@@ -115,11 +119,13 @@ class SetAssociatedAction extends UpdateAssociatedAction
      */
     protected function belongsTo(EntityInterface $entity, EntityInterface $relatedEntity = null)
     {
+        // `Tree` Entity can be dirty as join data are set in `ParentObjects`
+        $dirty = $entity->isDirty();
         $existing = $this->existing($entity);
 
         if ($existing === null && $relatedEntity === null) {
             return 0;
-        } elseif ($relatedEntity !== null) {
+        } elseif (!$dirty && $relatedEntity !== null) {
             $bindingKey = (array)$this->Association->getBindingKey();
 
             if ($existing !== null && $relatedEntity->extract($bindingKey) == $existing->extract($bindingKey)) {

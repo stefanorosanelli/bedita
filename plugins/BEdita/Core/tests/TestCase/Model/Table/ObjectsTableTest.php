@@ -48,6 +48,7 @@ class ObjectsTableTest extends TestCase
         'plugin.BEdita/Core.Translations',
         'plugin.BEdita/Core.Categories',
         'plugin.BEdita/Core.ObjectCategories',
+        'plugin.BEdita/Core.History',
     ];
 
     /**
@@ -289,6 +290,9 @@ class ObjectsTableTest extends TestCase
             'date_ranges' => [
                 [
                     'start_date' => '1992-08-17',
+                    'params' => [
+                        'k' => 'v',
+                    ],
                 ],
             ],
         ];
@@ -299,6 +303,7 @@ class ObjectsTableTest extends TestCase
         }
         $object = $this->Objects->get($object->id, ['contain' => ['DateRanges']]);
         static::assertCount(1, $object->date_ranges);
+        static::assertEquals(['k' => 'v'], $object->date_ranges[0]['params']);
 
         $data['date_ranges'][0]['start_date'] = date('Y-m-d');
         $object = $this->Objects->patchEntity($object, $data);
@@ -699,5 +704,27 @@ class ObjectsTableTest extends TestCase
             ->find('tags', ['first-tag'])
             ->toArray();
         static::assertSame(1, count($result));
+    }
+
+    /**
+     * Test `findUnameId` method.
+     *
+     * @return void
+     *
+     * @covers ::findUnameId()
+     */
+    public function testFindUnameID()
+    {
+        $result = TableRegistry::getTableLocator()
+            ->get('Profiles')
+            ->find('unameId', ['gustavo-supporto'])
+            ->firstOrFail();
+        static::assertSame(4, $result->get('id'));
+
+        $result = TableRegistry::getTableLocator()
+            ->get('Profiles')
+            ->find('unameId', [4])
+            ->firstOrFail();
+        static::assertSame('gustavo-supporto', $result->get('uname'));
     }
 }

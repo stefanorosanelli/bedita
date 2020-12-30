@@ -15,7 +15,6 @@ namespace BEdita\API\Test\TestCase\Controller;
 use BEdita\API\TestSuite\IntegrationTestCase;
 use Cake\Core\Configure;
 use Cake\I18n\Time;
-use Cake\Mailer\Email;
 use Cake\Mailer\TransportFactory;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Hash;
@@ -396,10 +395,8 @@ class SignupControllerTest extends IntegrationTestCase
         ]);
         $this->post('/signup/activation', json_encode($activationData));
 
-        $result = json_decode((string)$this->_response->getBody(), true);
-
         $this->assertResponseCode(204);
-        static::assertNull($result);
+        $this->assertResponseEmpty();
     }
 
     /**
