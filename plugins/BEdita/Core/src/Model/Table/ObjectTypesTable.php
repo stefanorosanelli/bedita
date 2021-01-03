@@ -1,7 +1,7 @@
 <?php
 /**
  * BEdita, API-first content management framework
- * Copyright 2016 ChannelWeb Srl, Chialab Srl
+ * Copyright 2020 ChannelWeb Srl, Chialab Srl
  *
  * This file is part of BEdita: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -85,6 +85,21 @@ class ObjectTypesTable extends Table
      * {@inheritDoc}
      */
     protected $_validatorClass = ObjectTypesValidator::class;
+
+    /**
+     * Object type names map: array with type names (singular and plural) as keys
+     * and type id as values.
+     *
+     * @var array
+     */
+    protected static $namesMap = [];
+
+    /**
+     * Object type map array: type ids as keys and entities as values.
+     *
+     * @var array
+     */
+    protected static $typesMap = [];
 
     /**
      * {@inheritDoc}
@@ -191,37 +206,62 @@ class ObjectTypesTable extends Table
     public function get($primaryKey, $options = [])
     {
         if (is_string($primaryKey) && !is_numeric($primaryKey)) {
-            $allTypes = array_flip(
-                $this->find('list')
-                    ->cache('map', self::CACHE_CONFIG)
-                    ->toArray()
-            );
-            $allTypes += array_flip(
-                $this->find('list', ['valueField' => 'singular'])
-                    ->cache('map_singular', self::CACHE_CONFIG)
-                    ->toArray()
-            );
-
-            $primaryKey = Inflector::underscore($primaryKey);
-            if (!isset($allTypes[$primaryKey])) {
-                throw new RecordNotFoundException(sprintf(
-                    'Record not found in table "%s"',
-                    $this->getTable()
-                ));
-            }
-
-            $primaryKey = $allTypes[$primaryKey];
+            $primaryKey = $this->primaryKeyValue($primaryKey);
         }
 
-        if (empty($options)) {
-            $options = [
-                'key' => sprintf('id_%d_rel', $primaryKey),
-                'cache' => self::CACHE_CONFIG,
-                'contain' => ['LeftRelations.RightObjectTypes', 'RightRelations.LeftObjectTypes'],
-            ];
+        if (!empty($options)) {
+            return parent::get($primaryKey, $options);
         }
 
-        return parent::get($primaryKey, $options);
+        if (!empty(static::$typesMap[$primaryKey])) {
+            return static::$typesMap[$primaryKey];
+        }
+
+        $options = [
+            'key' => sprintf('id_%d_rel', $primaryKey),
+            'cache' => self::CACHE_CONFIG,
+            'contain' => ['LeftRelations.RightObjectTypes', 'RightRelations.LeftObjectTypes'],
+        ];
+        static::$typesMap[$primaryKey] = parent::get($primaryKey, $options);
+
+        return static::$typesMap[$primaryKey];
+    }
+
+    /**
+     * Retrieve primary key value from plural or singular type name
+     *
+     * @param string $key Plural or singular type name.
+     * @return int
+     */
+    protected function primaryKeyValue(string $key): int
+    {
+        if (empty(static::$namesMap)) {
+            static::$namesMap = (array)Cache::remember(
+                'names_map',
+                function () {
+                    $allTypes = array_flip(
+                        $this->find('list')
+                            ->toArray()
+                    );
+
+                    return $allTypes + array_flip(
+                        $this->find('list', ['valueField' => 'singular'])
+                            ->toArray()
+                    );
+                },
+                self::CACHE_CONFIG
+            );
+        }
+
+        $key = Inflector::underscore($key);
+        if (!isset(static::$namesMap[$key])) {
+            throw new RecordNotFoundException(sprintf(
+                'Record not found in table "%s"',
+                $this->getTable()
+            ));
+        }
+
+        return (int)static::$namesMap[$key];
     }
 
     /**
