@@ -15,7 +15,6 @@ namespace BEdita\Core\Test\TestCase\Model\Table;
 
 use BEdita\Core\Exception\BadFilterException;
 use BEdita\Core\Model\Table\ObjectTypesTable;
-use BEdita\Core\Utility\LoggedUser;
 use Cake\Cache\Cache;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\BadRequestException;
@@ -378,6 +377,7 @@ class ObjectTypesTableTest extends TestCase
      *
      * @dataProvider getProvider
      * @covers ::get()
+     * @covers ::primaryKeyValue()
      */
     public function testGet($expected, $primaryKey)
     {
