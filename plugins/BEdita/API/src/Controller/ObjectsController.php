@@ -205,6 +205,7 @@ class ObjectsController extends ResourcesController
 
         $this->set(compact('data'));
         $this->set('_serialize', ['data']);
+        $this->jsonapiExclude();
     }
 
     /**
@@ -268,6 +269,7 @@ class ObjectsController extends ResourcesController
         $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('entity'));
         $this->set('_serialize', ['entity']);
+        $this->jsonapiExclude();
 
         return null;
     }
@@ -308,6 +310,7 @@ class ObjectsController extends ResourcesController
         $this->set('_fields', $this->request->getQuery('fields', []));
         $this->set(compact('objects'));
         $this->set('_serialize', ['objects']);
+        $this->jsonapiExclude();
 
         $available = $this->getAvailableUrl($relationship);
         $this->set('_links', compact('available'));

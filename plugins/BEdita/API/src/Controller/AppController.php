@@ -15,6 +15,7 @@ namespace BEdita\API\Controller;
 use BadMethodCallException;
 use BEdita\API\Datasource\JsonApiPaginator;
 use BEdita\Core\State\CurrentApplication;
+use BEdita\Core\Utility\JsonApiSerializable;
 use Cake\Controller\Controller;
 use Cake\Core\Configure;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -195,5 +196,35 @@ class AppController extends Controller
     protected function findAssociation($relationship)
     {
         throw new NotFoundException(__d('bedita', 'Relationship "{0}" does not exist', $relationship));
+    }
+
+    /**
+     * Handle `exclude` query string to exclude JSONAPI keys from response.
+     * Allowed terms on `exclude` query string are: 'attributes', 'links', 'meta' and 'relationships'.
+     *
+     * @return void
+     */
+    protected function jsonapiExclude(): void
+    {
+        $exclude = $this->request->getQuery('exclude');
+        if (empty($exclude)) {
+            return;
+        }
+        $exclude = (array)explode(',', $exclude);
+        $map = [
+            'attributes' => JsonApiSerializable::JSONAPIOPT_EXCLUDE_ATTRIBUTES,
+            'links' => JsonApiSerializable::JSONAPIOPT_EXCLUDE_LINKS,
+            'meta' => JsonApiSerializable::JSONAPIOPT_EXCLUDE_META,
+            'relationships' => JsonApiSerializable::JSONAPIOPT_EXCLUDE_RELATIONSHIPS,
+        ];
+        $exclude = array_intersect($exclude, array_keys($map));
+        $opts = 0;
+        array_walk(
+            $exclude,
+            function ($item) use ($opts, $map) {
+                $opts = $opts | $map[$item];
+            }
+        );
+        $this->set('_jsonApiOptions', $opts);
     }
 }
