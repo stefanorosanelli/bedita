@@ -61,12 +61,18 @@ abstract class CategoriesTagsBaseTable extends Table
      * Find enabled items
      *
      * @param Query $query Query object
+     * @param array $options Finder options
      * @return Query
      */
-    protected function findEnabled(Query $query)
+    protected function findEnabled(Query $query, array $options = [])
     {
+        $value = true;
+        if (isset($options[0])) {
+            $value = filter_var($options[0], FILTER_VALIDATE_BOOLEAN);
+        }
+
         return $query->where([
-            $this->aliasField('enabled') => true,
+            $this->aliasField('enabled') => $value,
         ]);
     }
 
