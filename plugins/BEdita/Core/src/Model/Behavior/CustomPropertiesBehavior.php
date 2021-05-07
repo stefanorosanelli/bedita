@@ -80,17 +80,17 @@ class CustomPropertiesBehavior extends Behavior
             return $this->available;
         }
 
-        try {
-            $objectType = $this->objectType($this->getTable()->getAlias());
-            $properties = TableRegistry::getTableLocator()->get('Properties')->find('type', ['dynamic'])
-                ->find('objectType', [$objectType->id])
-                ->where(['enabled' => true, 'is_static' => false])
-                ->all();
-        } catch (RecordNotFoundException $e) {
+        $objectType = $this->objectType();
+        if ($objectType === null) {
             return [];
         }
 
-        $this->available = collection($properties)->indexBy('name')->toArray();
+        $this->available = TableRegistry::getTableLocator()->get('Properties')
+            ->find('type', ['dynamic'])
+            ->find('objectType', [$objectType->id])
+            ->where(['enabled' => true, 'is_static' => false])
+            ->indexBy('name')
+            ->toArray();
 
         return $this->available;
     }
@@ -110,15 +110,18 @@ class CustomPropertiesBehavior extends Behavior
      *
      * @param \Cake\Event\Event $event Fired event.
      * @param \Cake\ORM\Query $query Query object instance.
-     * @return void
+     * @return \Cake\ORM\Query
      */
-    public function beforeFind(Event $event, Query $query)
+    public function beforeFind(Event $event, Query $query): Query
     {
-        $query->formatResults(function (CollectionInterface $results) {
-            return $results->map(function ($row) {
-                return $this->promoteProperties($row);
-            });
-        });
+        return $query->formatResults(
+            function (CollectionInterface $results) {
+                return $results->map(function ($row) {
+                    return $this->promoteProperties($row);
+                });
+            },
+            Query::PREPEND
+        );
     }
 
     /**

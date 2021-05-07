@@ -14,6 +14,7 @@
 namespace BEdita\Core\Test\TestCase\Model\Behavior;
 
 use BEdita\Core\Filesystem\FilesystemRegistry;
+use Cake\Collection\CollectionInterface;
 use Cake\Core\Configure;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -42,6 +43,7 @@ class CustomPropertiesBehaviorTest extends TestCase
         'plugin.BEdita/Core.Users',
         'plugin.BEdita/Core.Media',
         'plugin.BEdita/Core.Streams',
+        'plugin.BEdita/Core.History',
     ];
 
     /**
@@ -152,6 +154,31 @@ class CustomPropertiesBehaviorTest extends TestCase
     }
 
     /**
+     * Test get available properties for related object.
+     *
+     * @return void
+     *
+     * @covers ::getAvailable()
+     * @covers ::objectType()
+     */
+    public function testGetAvailableRelatedObject(): void
+    {
+        $table = TableRegistry::getTableLocator()->get('Profiles')
+            ->getAssociation('InverseTest')->getTarget();
+
+        static::assertEquals('InverseTest', $table->getAlias());
+
+        $behavior = $table->behaviors()->get('CustomProperties');
+        $result = $behavior->getAvailable();
+
+        $expected = ['another_title', 'another_description']; // documents custom props
+        $result = array_keys($result);
+        sort($result);
+        sort($expected);
+        static::assertEquals($expected, $result);
+    }
+
+    /**
      * Test get available when no object type is found
      *
      * @return void
@@ -256,6 +283,35 @@ class CustomPropertiesBehaviorTest extends TestCase
         foreach ($expectedProperties as $property) {
             static::assertArrayHasKey($property, $result);
         }
+    }
+
+    /**
+     * Test that formatter is prepended to other formatters that may be attached to the Query object.
+     *
+     * @return void
+     *
+     * @covers ::beforeFind()
+     */
+    public function testBeforeFindFormatterPrepended()
+    {
+        $expected = [
+            'files_property' => ['media-one' => null, 'media-two' => null],
+            'media_property' => ['media-one' => 'synapse', 'media-two' => null],
+            'count' => 2,
+        ];
+
+        $result = $this->getTableLocator()->get('Files')->find()
+            ->formatResults(function (CollectionInterface $results): array {
+                return [
+                    'files_property' => $results->combine('uname', 'files_property')->toArray(),
+                    'media_property' => $results->combine('uname', 'media_property')->toArray(),
+                    'count' => $results->count(),
+                ];
+            })
+            ->order('Files.id')
+            ->toArray();
+
+        static::assertSame($expected, $result);
     }
 
     /**
