@@ -4,8 +4,8 @@ use Migrations\AbstractMigration;
 class AddStreamMetadata extends AbstractMigration
 {
     /**
-    * {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
     public function up()
     {
         $columnTypes = $this->getAdapter()->getColumnTypes();
@@ -21,8 +21,8 @@ class AddStreamMetadata extends AbstractMigration
     }
 
     /**
-    * {@inheritDoc}
-    */
+     * {@inheritDoc}
+     */
     public function down()
     {
         $this->table('streams')
