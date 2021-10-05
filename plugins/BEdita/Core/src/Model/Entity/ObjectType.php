@@ -44,6 +44,7 @@ use Generator;
  * @property \Cake\I18n\Time $created
  * @property \Cake\I18n\Time $modified
  * @property bool $core_type
+ * @property bool $on_tree
  * @property bool $enabled
  * @property \BEdita\Core\Model\Entity\ObjectEntity[] $objects
  * @property \BEdita\Core\Model\Entity\Relation[] $left_relations
@@ -354,7 +355,7 @@ class ObjectType extends Entity implements JsonApiSerializable
         $relations = static::objectTypeRelations($this->getRelations('right'), 'right') +
             static::objectTypeRelations($this->getRelations('left'), 'left');
 
-        return $this->objectTypeProperties() + compact('associations', 'relations');
+        return $this->objectTypeProperties() + compact('associations', 'relations') + ['tree' => $this->on_tree];
     }
 
     /**
