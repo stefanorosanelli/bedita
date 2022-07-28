@@ -19,6 +19,7 @@ use Authentication\Authenticator\JwtAuthenticator;
 use Authentication\Identifier\JwtSubjectIdentifier;
 use BEdita\Core\Model\Entity\Application;
 use BEdita\Core\State\CurrentApplication;
+use Cake\Core\Configure;
 use Cake\Core\InstanceConfigTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Http\Exception\ForbiddenException;
@@ -75,12 +76,14 @@ class ApplicationMiddleware implements MiddlewareInterface
         $identity = $service->getIdentity();
         if (!empty($identity) && $identity->getOriginalData() instanceof Application) {
             CurrentApplication::setApplication($identity->getOriginalData());
+            $this->checkAllowedHosts($request);
 
             return $handler->handle($request);
         }
 
         $payload = $this->readPayload($service, $request);
         $this->readApplication($payload, $request);
+        $this->checkAllowedHosts($request);
 
         return $handler->handle($request);
     }
@@ -219,5 +222,30 @@ class ApplicationMiddleware implements MiddlewareInterface
         }
 
         throw new ForbiddenException(__d('bedita', 'Missing API key'));
+    }
+
+    /**
+     * Check if request host matches the application `allowed_hosts`.
+     * In case of no match a 403 Forbidden error is generated.
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request Request object.
+     * @return void
+     */
+    protected function checkAllowedHosts(ServerRequestInterface $request): void
+    {
+        $application = CurrentApplication::getApplication();
+        if (
+            empty($application) ||
+            Configure::read('Security.skipAppsHostsCheck', false) ||
+            empty($application->allowed_hosts)
+        ) {
+            return;
+        }
+
+        /** @var \Cake\Http\ServerRequest $request */
+        $host = $request->host();
+        if (!in_array($host, (array)$application->allowed_hosts)) {
+            throw new ForbiddenException('Host not allowed');
+        }
     }
 }

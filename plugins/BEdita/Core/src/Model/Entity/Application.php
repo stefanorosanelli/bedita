@@ -27,7 +27,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\Time $created
  * @property \Cake\I18n\Time $modified
  * @property bool $enabled
- *
+ * @property array $allowed_hosts
  * @property \BEdita\Core\Model\Entity\EndpointPermission[] $endpoint_permissions
  * @since 4.0.0
  */
