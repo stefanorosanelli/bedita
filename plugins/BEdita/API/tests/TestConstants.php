@@ -24,7 +24,7 @@ class TestConstants
      * @var array
      */
     public const SCHEMA_REVISIONS = [
-        'applications' => '3594165375',
+        'applications' => '1242014741',
         'documents' => '4059696127',
         'events' => '1528552691',
         'files' => '4129506705',

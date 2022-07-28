@@ -66,6 +66,7 @@ class ApplicationsControllerTest extends IntegrationTestCase
                         'name' => 'First app',
                         'description' => 'Lorem ipsum dolor sit amet, aliquet feugiat.',
                         'enabled' => true,
+                        'allowed_hosts' => null,
                     ],
                     'meta' => [
                         'api_key' => API_KEY,
@@ -84,6 +85,7 @@ class ApplicationsControllerTest extends IntegrationTestCase
                         'name' => 'Disabled app',
                         'description' => 'This app has been disabled',
                         'enabled' => false,
+                        'allowed_hosts' => null,
                     ],
                     'meta' => [
                         'api_key' => 'abcdef12345',
@@ -171,6 +173,7 @@ class ApplicationsControllerTest extends IntegrationTestCase
                     'name' => 'First app',
                     'description' => 'Lorem ipsum dolor sit amet, aliquet feugiat.',
                     'enabled' => true,
+                    'allowed_hosts' => null,
                 ],
                 'meta' => [
                     'api_key' => API_KEY,
