@@ -12,8 +12,6 @@ jobs:
       dist_branches: '["5-salix","4-cactus"]'
       version_ini_path: plugins/BEdita/Core/config/bedita.ini
       version_ini_prefix: "[BEdita]\nversion = "
-    outputs:
-      version: ${{ steps.version_release.outputs.VERSION }}
 
   # filter_tree:
   #   needs: release_job
@@ -29,7 +27,7 @@ jobs:
 
       - name: Print new docker tag
         run: |
-          echo new tag ${{ needs.release_job.outputs.version }}
+          echo ${{ needs.release_job.outputs.version }}
 
       # - uses: mr-smithers-excellent/docker-build-push@v5
       #   with:
