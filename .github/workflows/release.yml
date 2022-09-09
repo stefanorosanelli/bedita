@@ -19,6 +19,7 @@ jobs:
     secrets: inherit
 
   docker_push:
+    runs-on: 'ubuntu-latest'
     needs: release_job
     steps:
       - uses: actions/checkout@v3
