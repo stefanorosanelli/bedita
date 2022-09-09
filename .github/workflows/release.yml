@@ -15,3 +15,4 @@ jobs:
 
   filter-tree:
     uses: ./.github/workflows/filter-components.yml
+    secrets: inherit
