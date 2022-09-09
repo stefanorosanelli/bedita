@@ -12,28 +12,30 @@ jobs:
       dist_branches: '["5-salix","4-cactus"]'
       version_ini_path: plugins/BEdita/Core/config/bedita.ini
       version_ini_prefix: "[BEdita]\nversion = "
+    outputs:
+      version: ${{ steps.version_release.outputs.VERSION }}
 
-  filter_tree:
-    needs: release_job
-    uses: ./.github/workflows/filter-components.yml
-    secrets: inherit
+  # filter_tree:
+  #   needs: release_job
+  #   uses: ./.github/workflows/filter-components.yml
+  #   secrets: inherit
 
   docker_push:
     runs-on: 'ubuntu-latest'
     needs: release_job
     steps:
-      - uses: actions/checkout@v3
-        name: Check out code
+      # - uses: actions/checkout@v3
+      #   name: Check out code
 
       - name: Print new docker tag
         run: |
           echo new tag ${{ needs.release_job.outputs.version }}
 
-      - uses: mr-smithers-excellent/docker-build-push@v5
-        with:
-          image: bedita/bedita
-          registry: docker.io
-          tags: ${{ needs.release_job.outputs.version }}
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      # - uses: mr-smithers-excellent/docker-build-push@v5
+      #   with:
+      #     image: bedita/bedita
+      #     registry: docker.io
+      #     tags: ${{ needs.release_job.outputs.version }}
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
 
