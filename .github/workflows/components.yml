@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - '**'
+      - '!5-salix'
+      - '!4-cactus'
     paths:
       - 'plugins/BEdita/**'
       - '.github/workflows/*'
