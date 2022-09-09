@@ -3,13 +3,13 @@ name: 'Run tests'
 on:
   pull_request:
     paths:
-      - '**/*.php'
-      - '.github/workflows/*'
+      # - '**/*.php'
+      # - '.github/workflows/*'
       - '**/composer.json'
   push:
     paths:
-      - '**/*.php'
-      - '.github/workflows/*'
+      # - '**/*.php'
+      # - '.github/workflows/*'
       - '**/composer.json'
 
 jobs:
