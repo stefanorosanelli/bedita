@@ -1,0 +1,18 @@
+name: Release
+
+on:
+  pull_request_target:
+    types: [closed]
+
+jobs:
+  release-job:
+    uses: bedita/github-workflows/.github/workflows/release.yml@v1
+    with:
+      main_branch: '5-salix'
+      dist_branches: '["5-salix","4-cactus"]'
+      version_ini_path: plugins/BEdita/Core/config/bedita.ini
+      version_ini_prefix: "[BEdita]\nversion = "
+
+  filter-tree:
+    uses: ./.github/workflows/filter-components.yml
+    secrets: inherit
