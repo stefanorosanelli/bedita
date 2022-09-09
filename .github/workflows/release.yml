@@ -5,15 +5,25 @@ on:
     types: [closed]
 
 jobs:
-  release-job:
-    uses: bedita/github-workflows/.github/workflows/release.yml@v1
+  release_job:
+    uses: bedita/github-workflows/.github/workflows/release.yml@feat/output-release
     with:
       main_branch: '5-salix'
       dist_branches: '["5-salix","4-cactus"]'
       version_ini_path: plugins/BEdita/Core/config/bedita.ini
       version_ini_prefix: "[BEdita]\nversion = "
 
-  filter-tree:
-    needs: release-job
+  filter_tree:
+    needs: release_job
     uses: ./.github/workflows/filter-components.yml
     secrets: inherit
+
+  docker_push:
+    needs: release_job
+    uses: mr-smithers-excellent/docker-build-push@v5
+    with:
+      image: bedita/bedita
+      registry: docker.io
+      tag: ${{ needs.release_job.outputs.version }}
+      username: ${{ secrets.DOCKER_USERNAME }}
+      password: ${{ secrets.DOCKER_PASSWORD }}
