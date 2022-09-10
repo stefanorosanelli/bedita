@@ -35,6 +35,10 @@ jobs:
         run: |
           echo version var ${{ needs.release_job.outputs.version }}
 
+      - name: Update version file
+        run: |
+          echo "[BEdita]\nversion = ${{ needs.release_job.outputs.version }}" > plugins/BEdita/Core/config/bedita.ini
+
       - uses: mr-smithers-excellent/docker-build-push@v5
         with:
           # image: '${{ github.repository_owner }}/bedita'
