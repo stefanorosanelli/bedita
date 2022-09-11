@@ -13,7 +13,6 @@ jobs:
       version_ini_path: plugins/BEdita/Core/config/bedita.ini
       version_ini_prefix: "[BEdita]\nversion = "
 
-
   filter_tree:
     needs: release_job
     uses: ./.github/workflows/filter-components.yml
