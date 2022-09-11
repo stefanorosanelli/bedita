@@ -14,8 +14,9 @@ jobs:
     with:
       main_branch: '5-salix'
       dist_branches: '["5-salix","4-cactus"]'
-      version_ini_path: ${{ env.VERSION_INI_PATH }}
-      version_ini_prefix: ${{ env.VERSION_INI_PREFIX }}
+      version_ini_path: $VERSION_INI_PATH
+      version_ini_prefix: $VERSION_INI_PREFIX
+
 
   filter_tree:
     needs: release_job
