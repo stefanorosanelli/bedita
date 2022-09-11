@@ -4,18 +4,14 @@ on:
   pull_request_target:
     types: [closed]
 
-env:
-  VERSION_INI_PATH: plugins/BEdita/Core/config/bedita.ini
-  VERSION_INI_PREFIX: "[BEdita]\nversion = "
-
 jobs:
   release_job:
     uses: bedita/github-workflows/.github/workflows/release.yml@feat/output-release
     with:
       main_branch: '5-salix'
       dist_branches: '["5-salix","4-cactus"]'
-      version_ini_path: $VERSION_INI_PATH
-      version_ini_prefix: $VERSION_INI_PREFIX
+      version_ini_path: plugins/BEdita/Core/config/bedita.ini
+      version_ini_prefix: "[BEdita]\nversion = "
 
 
   filter_tree:
@@ -37,7 +33,7 @@ jobs:
 
       - name: Update version file
         run: |
-          echo "$VERSION_INI_PREFIX ${{ needs.release_job.outputs.version }}" > $VERSION_INI_PATH
+          echo "[BEdita]\nversion = ${{ needs.release_job.outputs.version }}" > plugins/BEdita/Core/config/bedita.ini
 
       - uses: mr-smithers-excellent/docker-build-push@v5
         with:
