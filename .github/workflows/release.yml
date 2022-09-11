@@ -4,14 +4,18 @@ on:
   pull_request_target:
     types: [closed]
 
+env:
+  VERSION_INI_PATH: plugins/BEdita/Core/config/bedita.ini
+  VERSION_INI_PREFIX: "[BEdita]\nversion = "
+
 jobs:
   release_job:
     uses: bedita/github-workflows/.github/workflows/release.yml@feat/output-release
     with:
       main_branch: '5-salix'
       dist_branches: '["5-salix","4-cactus"]'
-      version_ini_path: plugins/BEdita/Core/config/bedita.ini
-      version_ini_prefix: "[BEdita]\nversion = "
+      version_ini_path: ${{ env.VERSION_INI_PATH }}
+      version_ini_prefix: ${{ env.VERSION_INI_PREFIX }}
 
   filter_tree:
     needs: release_job
@@ -20,16 +24,11 @@ jobs:
 
   docker_push:
     runs-on: 'ubuntu-latest'
-    needs: [release_job, filter_tree]
+    needs: release_job
     steps:
 
       - name: Checkout Code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: 'Output last 5 commits'
-        run: 'git log -n 5'
 
       - name: Debug output version
         run: |
@@ -37,12 +36,11 @@ jobs:
 
       - name: Update version file
         run: |
-          echo "[BEdita]\nversion = ${{ needs.release_job.outputs.version }}" > plugins/BEdita/Core/config/bedita.ini
+          echo "$VERSION_INI_PREFIX ${{ needs.release_job.outputs.version }}" > $VERSION_INI_PATH
 
       - uses: mr-smithers-excellent/docker-build-push@v5
         with:
-          # image: '${{ github.repository_owner }}/bedita'
-          image: bedita/bedita
+          image: '${{ github.repository }}'
           registry: docker.io
           tags: ${{ needs.release_job.outputs.version }}
           username: ${{ secrets.DOCKER_USERNAME }}
