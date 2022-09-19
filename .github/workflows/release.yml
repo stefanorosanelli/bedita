@@ -30,7 +30,7 @@ jobs:
         run: |
           echo version var ${{ needs.release_job.outputs.version }}
 
-      - name: Echo if no version has been created
+      - name: Print message if no version has been created
         if: contains(needs.release_job.outputs.version, 'undefined')
         run: |
           echo Skip version file update and docker image creation
