@@ -33,7 +33,7 @@ jobs:
       - name: Echo if no version has been created
         if: contains(needs.release_job.outputs.version, 'undefined')
         run: |
-          echo No version file updated and no docker image created
+          echo Skip version file update and docker image creation
 
       - name: Update version file
         if: !contains(needs.release_job.outputs.version, 'undefined')
