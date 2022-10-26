@@ -38,7 +38,7 @@ jobs:
       - name: Update version file
         if: ${{ !contains(needs.release_job.outputs.version, 'undefined') }}
         run: |
-          echo "[BEdita]\nversion = ${{ needs.release_job.outputs.version }}" > plugins/BEdita/Core/config/bedita.ini
+          echo -e "[BEdita]\nversion = ${{ needs.release_job.outputs.version }}" > plugins/BEdita/Core/config/bedita.ini
 
       - name: Set up QEMU
         if: ${{ !contains(needs.release_job.outputs.version, 'undefined') }}
