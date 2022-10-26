@@ -2,15 +2,16 @@ name: 'Publish components'
 
 on:
   push:
-    branches:
-      - '**'
-      - '!5-salix'
-      - '!4-cactus'
+    # branches:
+    #   - '**'
+    #   - '!5-salix'
+    #   - '!4-cactus'
     paths:
-      - 'plugins/BEdita/**'
-      - '.github/workflows/*'
-    tags:
-      - '*'
+      - undefined
+      # - 'plugins/BEdita/**'
+      # - '.github/workflows/*'
+    # tags:
+    #   - '*'
 
 jobs:
   filter-tree:
