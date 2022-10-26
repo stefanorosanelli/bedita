@@ -62,3 +62,4 @@ jobs:
           context: .
           push: true
           tags: "${{ github.repository }}:${{ needs.release_job.outputs.version }}"
+
