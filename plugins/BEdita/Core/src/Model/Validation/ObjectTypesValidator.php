@@ -24,9 +24,7 @@ use Cake\Validation\Validator;
 class ObjectTypesValidator extends Validator
 {
     /**
-     * {@inheritDoc}
-     *
-     * @codeCoverageIgnore
+     * @inheritDoc
      */
     public function __construct()
     {
@@ -69,10 +67,13 @@ class ObjectTypesValidator extends Validator
             ->allowEmptyString('description');
 
         $this
-            ->allowEmptyString('associations');
+            ->isArray('associations')
+            // `allowEmptyArray` unfortunately accepts empty strings as input -> we use `allowEmptyFor`
+            ->allowEmptyFor('associations', self::EMPTY_NULL | self::EMPTY_ARRAY);
 
         $this
-            ->allowEmptyString('hidden');
+            ->isArray('hidden')
+            ->allowEmptyFor('hidden', self::EMPTY_NULL | self::EMPTY_ARRAY);
 
         return $this;
     }
