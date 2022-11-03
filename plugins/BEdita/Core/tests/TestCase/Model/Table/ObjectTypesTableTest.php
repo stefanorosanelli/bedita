@@ -208,6 +208,41 @@ class ObjectTypesTableTest extends TestCase
                     'model' => 'Objects',
                 ],
             ],
+            'bad hidden' => [
+                false,
+                [
+                    'id' => 3,
+                    'hidden' => 'name',
+                ],
+            ],
+            'bad association' => [
+                false,
+                [
+                    'id' => 3,
+                    'associations' => '',
+                ],
+            ],
+            'bad association 2' => [
+                false,
+                [
+                    'id' => 3,
+                    'associations' => 'pippo',
+                ],
+            ],
+            'ok association' => [
+                true,
+                [
+                    'id' => 3,
+                    'associations' => ['pippo'],
+                ],
+            ],
+            'ok association 2' => [
+                true,
+                [
+                    'id' => 3,
+                    'associations' => null,
+                ],
+            ],
         ];
     }
 
@@ -219,10 +254,11 @@ class ObjectTypesTableTest extends TestCase
      * @return void
      * @dataProvider validationProvider
      * @covers \BEdita\Core\ORM\Rule\IsUniqueAmongst
+     * @covers \BEdita\Core\Model\Validation\ObjectTypesValidator
      */
     public function testValidation($expected, array $data)
     {
-        $objectType = $this->ObjectTypes->newEntity([]);
+        $objectType = $this->ObjectTypes->newEmptyEntity();
         if (!empty($data['id'])) {
             $objectType = $this->ObjectTypes->get($data['id']);
         }
