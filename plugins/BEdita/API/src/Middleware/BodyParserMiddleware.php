@@ -61,4 +61,32 @@ class BodyParserMiddleware extends CakeBodyParserMiddleware
 
         return $result;
     }
+
+    /**
+     * Decode JSON into an array.
+     * Check for empty JSON objects in 'attributes' and avoid
+     *
+     * @param string $body The request body to decode
+     * @return array|null
+     */
+    protected function decodeJson(string $body): ?array
+    {
+        $decoded = parent::decodeJson($body);
+        if (empty($decoded) || empty($decoded['data']['attributes'])) {
+            return $decoded;
+        }
+
+        // Decodes JSON without converting to associative array and
+        // check if attributes having an empty array value are empty objects instead
+        $object = json_decode($body);
+        $attributes = $object->data->attributes ?? new \stdClass();
+        foreach ($decoded['data']['attributes'] as $key => $value) {
+            $item = $attributes->$key ?? null;
+            if ($value === [] && $item !== []) {
+                $decoded['data']['attributes'][$key] = $item;
+            }
+        }
+
+        return $decoded;
+    }
 }
